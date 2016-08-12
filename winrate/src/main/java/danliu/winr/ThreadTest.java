@@ -10,6 +10,25 @@ import java.util.Stack;
 public class ThreadTest {
 
     public static void main(String[] args) {
+        testThreadName();
+    }
+
+    private static void testThreadName() {
+        System.out.println(Thread.currentThread().getName());
+        Thread.currentThread().setName("mainThread");
+        System.out.println(Thread.currentThread().getName());
+        final Thread t = new Thread() {
+            @Override
+            public void run() {
+                System.out.println(Thread.currentThread().getName());
+                Thread.currentThread().setName("subThread");
+                System.out.println(Thread.currentThread().getName());
+            }
+        };
+        t.start();
+    }
+
+    private static void testThread() {
         String[] names = new String[] {"A","B","C","D","E","F"};
         SHolder holder = new SHolder();
         List<TestThread> all = new ArrayList<>();
