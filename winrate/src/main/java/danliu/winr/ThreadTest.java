@@ -1,17 +1,62 @@
 package danliu.winr;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by danliu on 16-8-11.
  */
 public class ThreadTest {
 
+    private static final Pattern CITY_PATTERN = Pattern.compile("<City ID=\"(\\d+)\" CityName=\"([\u4E00-\u9FA5]+)\" PID=\"(\\d+)\" ZipCode=\"(\\d+)\"");
+    private static final Pattern PROVINCE_PATTERN = Pattern.compile("<Province ID=\"\\d+\" ProvinceName=\"([\u4E00-\u9FA5]+)\"");
+    private static final Pattern DISTRICT_PATTERN = Pattern.compile("<District ID=\"\\d+\" DistrictName=\"([\u4E00-\u9FA5]+)\" CID=\"(\\d+)\"");
+
+
     public static void main(String[] args) {
-        testThreadName();
+        Pattern pattern = Pattern.compile("^[\\u4E00-\\u9FA5]+$");
+
+        try {
+            String city = SimpleIOUtils.loadContent(new FileInputStream(new File(SimpleIOUtils.getProjectRoot(), "winrate/src/main/resources/Cities.xml")));
+            String province = SimpleIOUtils.loadContent(new FileInputStream(new File(SimpleIOUtils.getProjectRoot(), "winrate/src/main/resources/Provinces.xml")));
+            String district = SimpleIOUtils.loadContent(new FileInputStream(new File(SimpleIOUtils.getProjectRoot(), "winrate/src/main/resources/Districts.xml")));
+
+            StringBuilder builder = new StringBuilder();
+
+            Matcher matcher = CITY_PATTERN.matcher(city);
+            while(matcher.find()) {
+                builder.append(
+                        String.format("INSERT INTO city (name,pid,zip_code) VALUES ('%s',%s,%s)", matcher.group(2), matcher.group(3), matcher.group(4)))
+                .append(";\n");
+            }
+
+            matcher = PROVINCE_PATTERN.matcher(province);
+            while (matcher.find()) {
+                builder.append(
+                        String.format("INSERT INTO province (name) VALUES ('%s')", matcher.group(1))
+                ).append(";\n");
+            }
+
+            matcher = DISTRICT_PATTERN.matcher(district);
+            while (matcher.find()) {
+                builder.append(String.format("INSERT INTO district (name,cid) VALUES ('%s',%s)", matcher.group(1), matcher.group(2)))
+                .append(";\n");
+            }
+            System.out.println(builder.toString());
+            SimpleIOUtils.saveToFile(new File(SimpleIOUtils.getProjectRoot(), "winrate/src/main/resources/result"), builder.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
+
+
 
     private static void testThreadName() {
         System.out.println(Thread.currentThread().getName());
